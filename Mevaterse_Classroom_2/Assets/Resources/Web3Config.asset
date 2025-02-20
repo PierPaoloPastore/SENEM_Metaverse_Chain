@@ -12,6 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512a0f920c4549c6b8fa15ad0baa6cca, type: 3}
   m_Name: Web3Config
   m_EditorClassIdentifier: 
-  <ProjectId>k__BackingField: 
+  <ProjectId>k__BackingField: c947f386-a0d3-4b87-be46-cdafbae87baa
   <EnableAnalytics>k__BackingField: 1
-  <ChainConfigs>k__BackingField: []
+  <ChainConfigs>k__BackingField:
+  - <ChainId>k__BackingField: 11155111
+    <Symbol>k__BackingField: ETH
+    <Chain>k__BackingField: Sepolia
+    <Network>k__BackingField: ETH
+    <Rpc>k__BackingField: https://rpc.sepolia.org
+    <Ws>k__BackingField: wss://sepolia.infura.io/v3/${d011ca708b824a6cae996315a6fd0396}
+    <BlockExplorerUrl>k__BackingField: https://sepolia.etherscan.io

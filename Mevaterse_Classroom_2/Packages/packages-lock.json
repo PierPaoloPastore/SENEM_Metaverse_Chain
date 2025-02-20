@@ -204,6 +204,16 @@
       },
       "url": "https://package.openupm.com"
     },
+    "io.chainsafe.web3-unity.web3auth": {
+      "version": "3.0.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2",
+        "io.chainsafe.web3-unity": "3.0.6"
+      },
+      "url": "https://package.openupm.com"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
