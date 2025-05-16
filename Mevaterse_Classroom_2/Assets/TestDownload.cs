@@ -1,16 +1,25 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Collections.Generic;
 
 public class TestDownload : MonoBehaviour
 {
-    public GameObject obj;
     private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token qui
     private const string BASE_URL = "https://api.pinata.cloud/v3/files/public/"; // URL base per l'endpoint get-file-by-id
 
     private const string url_pubblico= "https://gateway.pinata.cloud/ipfs/bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
     public string cid;
-   // private const string cid = "bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
+    //Buffer per le nuove slide 
+    private List<Material> newLesson = new List<Material>();
+    private List<BoardController> boards;
+    // private const string cid = "bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
+
+
+    private void Start()
+    {
+        boards = new List<BoardController>(FindObjectsOfType<BoardController>());
+    }
 
     void Update()
     {
@@ -20,6 +29,10 @@ public class TestDownload : MonoBehaviour
             // Inserisci il tuo CID (file hash) per fare la richiesta al file specifico
             string fileHash = "0195d21f-5021-7d38-9991-9c4d8514ca0a"; // Esempio, sostituiscilo con il tuo hash
             //StartCoroutine(DownloadFileById(fileHash));
+            if (cid == null)
+            {
+                Debug.Log("CID ASSENTE! INSERIRE CID NEL TestDownload");
+            }
             StartCoroutine(DownloadImageFromCid(cid));
            
 
@@ -29,6 +42,7 @@ public class TestDownload : MonoBehaviour
     //Questo accede direttamente all'ipfs pubblico, e funziona
     public IEnumerator DownloadImageFromCid(string cid)
     {
+        newLesson.Clear();//Pulisco in caso di utilizzo passato
         string imageUrl = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/" + cid;
         UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(imageUrl);
 
@@ -47,9 +61,18 @@ public class TestDownload : MonoBehaviour
                 renderer.material = mat;
                 Debug.Log("Immagine caricata e applicata!");
             }
+            //Aggiungo al buffer
+            newLesson.Add(mat);
+
+
+            foreach (var board in boards)//aggiorna tutti i board controller
+            {
+                board.ChangeLoadedLesson(newLesson);
+               
+            }
 
             // Ora stai aggiungendo un Material, non una Texture2D
-            obj.GetComponent<BoardController>().slides.Add(mat);
+          
         }
         else if (webRequest.responseCode == 429)
         {

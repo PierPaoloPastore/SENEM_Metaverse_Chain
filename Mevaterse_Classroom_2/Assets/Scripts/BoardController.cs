@@ -133,4 +133,14 @@ public class BoardController : MonoBehaviourPunCallbacks, IPunObservable
         }
         GetComponent<Renderer>().material = slides[current];
     }
+
+    public void ChangeLoadedLesson(List<Material>newLesson )//IMPORTANTE! Devono essere già materiali, quindi nel caso effettuare prima la conversione 
+    {
+        slides.Clear();
+        slides.AddRange(newLesson);
+        //importante resettare anche il puntatore alla slide attuale 
+        current = 0;
+        ChangeSlideRpc(current);
+        Debug.Log($"Slides aggiornate: {slides.Count} elementi copiati.");
+    }
 }
