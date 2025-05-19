@@ -6624,7 +6624,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f959c866a884baa489e8e58e006a0817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slides: []
 --- !u!114 &555277852
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14315,7 +14314,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dc157c69135da443802768a2fc4b75e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  obj: {fileID: 2193423312837781259}
   cid: bafkreicqaxsdy5knbdprrbqj7jt7bahr3cz5f2htlxfyn25s4guwzdwq6y
 --- !u!65 &1093130140
 BoxCollider:
@@ -34353,7 +34351,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f959c866a884baa489e8e58e006a0817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slides: []
 --- !u!114 &4931218027885895239
 MonoBehaviour:
   m_ObjectHideFlags: 0

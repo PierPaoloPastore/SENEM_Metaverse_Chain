@@ -134,7 +134,7 @@ public class BoardController : MonoBehaviourPunCallbacks, IPunObservable
         GetComponent<Renderer>().material = slides[current];
     }
 
-    public void ChangeLoadedLesson(List<Material>newLesson )//IMPORTANTE! Devono essere già materiali, quindi nel caso effettuare prima la conversione 
+    public void ChangeLoadedLesson(List<Material>newLesson)
     {
         slides.Clear();
         slides.AddRange(newLesson);

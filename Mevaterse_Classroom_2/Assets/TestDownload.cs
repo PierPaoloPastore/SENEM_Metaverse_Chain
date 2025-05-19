@@ -2,23 +2,27 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 public class TestDownload : MonoBehaviour
 {
     private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token qui
     private const string BASE_URL = "https://api.pinata.cloud/v3/files/public/"; // URL base per l'endpoint get-file-by-id
-
-    private const string url_pubblico= "https://gateway.pinata.cloud/ipfs/bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
+    private const string GATEWAY = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/";
+    private const string url_pubblico = "https://gateway.pinata.cloud/ipfs/bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
     public string cid;
     //Buffer per le nuove slide 
     private List<Material> newLesson = new List<Material>();
     private List<BoardController> boards;
     // private const string cid = "bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
+    public List<Group> gruppi = new List<Group>();
+
 
 
     private void Start()
     {
         boards = new List<BoardController>(FindObjectsOfType<BoardController>());
+
     }
 
     void Update()
@@ -34,16 +38,17 @@ public class TestDownload : MonoBehaviour
                 Debug.Log("CID ASSENTE! INSERIRE CID NEL TestDownload");
             }
             StartCoroutine(DownloadImageFromCid(cid));
-           
+            StartCoroutine(GetGroups());
+
 
         }
     }
 
-    //Questo accede direttamente all'ipfs pubblico, e funziona
+    //Accede direttamente all' IPFS pubblico tramite il gateway pubblico del progetto, e restituisce un
     public IEnumerator DownloadImageFromCid(string cid)
     {
         newLesson.Clear();//Pulisco in caso di utilizzo passato
-        string imageUrl = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/" + cid;
+        string imageUrl = GATEWAY + cid;
         UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(imageUrl);
 
         yield return webRequest.SendWebRequest();
@@ -68,11 +73,11 @@ public class TestDownload : MonoBehaviour
             foreach (var board in boards)//aggiorna tutti i board controller
             {
                 board.ChangeLoadedLesson(newLesson);
-               
+
             }
 
             // Ora stai aggiungendo un Material, non una Texture2D
-          
+
         }
         else if (webRequest.responseCode == 429)
         {
@@ -87,7 +92,7 @@ public class TestDownload : MonoBehaviour
     }
 
 
-    //Questo invece restituisce un file Json che devo capire come manipolare 
+    //Metodo che restituisce un file Json
     private IEnumerator DownloadFileById(string fileHash)
     {
         // Costruisci l'URL completo con l'hash del file
@@ -142,4 +147,97 @@ public class TestDownload : MonoBehaviour
             }
         }
     }
+    /* questa è la versione per testare 
+    IEnumerator GetGroups()
+    {
+        string url = "https://api.pinata.cloud/v3/groups/public";
+
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        request.SetRequestHeader("Authorization", "Bearer " + BEARER_Token);
+
+        yield return request.SendWebRequest();
+
+#if UNITY_2020_1_OR_NEWER
+        if (request.result != UnityWebRequest.Result.Success)
+#else
+        if (request.isNetworkError || request.isHttpError)
+#endif
+        {
+            Debug.LogError("Errore nella richiesta: " + request.error);
+        }
+        else
+        {
+            Debug.Log("Risposta dalla API:");
+            Debug.Log(request.downloadHandler.text);
+        }
+    }
+    */
+
+    IEnumerator GetGroups()
+    {
+        string url = "https://api.pinata.cloud/v3/groups/public";
+
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        request.SetRequestHeader("Authorization", "Bearer " + BEARER_Token);
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Errore nella richiesta: " + request.error);
+        }
+        else
+        {
+            var json = request.downloadHandler.text;
+            GroupResponse groupResponse = JsonConvert.DeserializeObject<GroupResponse>(json);
+
+            gruppi = groupResponse.data.groups;
+
+            foreach (var g in gruppi)
+            {
+                Debug.Log($"Gruppo trovato: {g.name} (ID: {g.id})");
+            }
+
+            // ESEMPIO: prendi il primo gruppo
+            if (gruppi.Count > 0)
+            {
+                string selectedGroupId = gruppi[0].id;
+                StartCoroutine(GetFilesInGroup(selectedGroupId));
+            }
+        }
+    }
+
+
+
+    IEnumerator GetFilesInGroup(string groupId)
+    {
+        string url = $"https://api.pinata.cloud/v3/files/public?group_id={groupId}";
+
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        request.SetRequestHeader("Authorization", "Bearer " + BEARER_Token);
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Errore nel recupero file: " + request.error);
+        }
+        else
+        {
+            string json = request.downloadHandler.text;
+            Debug.Log("File trovati nel gruppo selezionato:");
+            Debug.Log(json);
+
+            FileResponse fileResponse = JsonConvert.DeserializeObject<FileResponse>(json);
+
+            foreach (var file in fileResponse.data.files)
+            {
+                Debug.Log($"Scarico immagine: {file.name} (CID: {file.cid})");
+                StartCoroutine(DownloadImageFromCid(file.cid));
+            }
+
+            // Se vuoi: deserializza qui il json in una lista di oggetti file
+        }
+    }
+
 }
