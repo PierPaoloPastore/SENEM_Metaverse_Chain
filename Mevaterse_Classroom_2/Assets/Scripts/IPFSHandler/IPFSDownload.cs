@@ -4,12 +4,13 @@ using UnityEngine.Networking;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-public class TestDownload : MonoBehaviour
+public class IPFSDownload : MonoBehaviour
 {
     private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token qui
     private const string BASE_URL = "https://api.pinata.cloud/v3/files/public/"; // URL base per l'endpoint get-file-by-id
     private const string GATEWAY = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/";
     private const string url_pubblico = "https://gateway.pinata.cloud/ipfs/bafkreiadp3ch3cbxyg6grfkkclbbz3zo3upjajrpw6g5zgu24u4lcbtw2y";
+    public GroupListUI groupListUI; // lo collegherai da Inspector
     public string cid;
     //Buffer per le nuove slide 
     private List<Material> newLesson = new List<Material>();
@@ -22,7 +23,7 @@ public class TestDownload : MonoBehaviour
     private void Start()
     {
         boards = new List<BoardController>(FindObjectsOfType<BoardController>());
-
+        groupListUI = FindObjectOfType<GroupListUI>();
     }
 
     void Update()
@@ -48,52 +49,59 @@ public class TestDownload : MonoBehaviour
     public IEnumerator DownloadImageFromCid(string cid)
     {
         newLesson.Clear();//Pulisco in caso di utilizzo passato
+        if (cid != null)
+        {                    
         string imageUrl = GATEWAY + cid;
         UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(imageUrl);
 
         yield return webRequest.SendWebRequest();
 
-        if (webRequest.result == UnityWebRequest.Result.Success)
-        {
-            Texture2D texture = ((DownloadHandlerTexture)webRequest.downloadHandler).texture;
-            Renderer renderer = GetComponent<Renderer>();
-
-            Material mat = new Material(Shader.Find("Standard"));
-            mat.mainTexture = texture;
-
-            if (renderer != null)
+            if (webRequest.result == UnityWebRequest.Result.Success)
             {
-                renderer.material = mat;
-                Debug.Log("Immagine caricata e applicata!");
+                Texture2D texture = ((DownloadHandlerTexture)webRequest.downloadHandler).texture;
+                Renderer renderer = GetComponent<Renderer>();
+
+                Material mat = new Material(Shader.Find("Standard"));
+                mat.mainTexture = texture;
+
+                if (renderer != null)
+                {
+                    renderer.material = mat;
+                    Debug.Log("Immagine caricata e applicata!");
+                }
+                //Aggiungo al buffer
+                newLesson.Add(mat);
+
+
+                foreach (var board in boards)//aggiorna tutti i board controller
+                {
+                    board.ChangeLoadedLesson(newLesson);
+
+                }
+
+                // Ora stai aggiungendo un Material, non una Texture2D
+
             }
-            //Aggiungo al buffer
-            newLesson.Add(mat);
-
-
-            foreach (var board in boards)//aggiorna tutti i board controller
+            else if (webRequest.responseCode == 429)
             {
-                board.ChangeLoadedLesson(newLesson);
-
+                Debug.LogError("Errore 429 - Troppo molte richieste! Attendere...");
+                yield return new WaitForSeconds(5f); // Aspetta 5 secondi prima di riprovare
+                StartCoroutine(DownloadImageFromCid(cid)); // Riprova la richiesta
             }
-
-            // Ora stai aggiungendo un Material, non una Texture2D
-
-        }
-        else if (webRequest.responseCode == 429)
-        {
-            Debug.LogError("Errore 429 - Troppo molte richieste! Attendere...");
-            yield return new WaitForSeconds(5f); // Aspetta 5 secondi prima di riprovare
-            StartCoroutine(DownloadImageFromCid(cid)); // Riprova la richiesta
+            else
+            {
+                Debug.LogError("Errore nel download dell'immagine: " + webRequest.error);
+            }
         }
         else
         {
-            Debug.LogError("Errore nel download dell'immagine: " + webRequest.error);
+            Debug.Log("Nessun cid rilevato!");
         }
     }
 
 
-    //Metodo che restituisce un file Json
-    private IEnumerator DownloadFileById(string fileHash)
+        //Metodo che restituisce un file Json
+        private IEnumerator DownloadFileById(string fileHash)
     {
         // Costruisci l'URL completo con l'hash del file
         string url = BASE_URL + fileHash;
@@ -173,7 +181,7 @@ public class TestDownload : MonoBehaviour
     }
     */
 
-    IEnumerator GetGroups()
+    public IEnumerator GetGroups()
     {
         string url = "https://api.pinata.cloud/v3/groups/public";
 
@@ -197,6 +205,7 @@ public class TestDownload : MonoBehaviour
             {
                 Debug.Log($"Gruppo trovato: {g.name} (ID: {g.id})");
             }
+            groupListUI.ShowGroups(gruppi);//DA CANCELLARE SE NON VA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             // ESEMPIO: prendi il primo gruppo
             if (gruppi.Count > 0)
@@ -209,7 +218,7 @@ public class TestDownload : MonoBehaviour
 
 
 
-    IEnumerator GetFilesInGroup(string groupId)
+    public IEnumerator GetFilesInGroup(string groupId)
     {
         string url = $"https://api.pinata.cloud/v3/files/public?group_id={groupId}";
 
