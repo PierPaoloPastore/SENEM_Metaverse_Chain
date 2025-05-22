@@ -2,10 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using TMPro;
 using Newtonsoft.Json;
 
 public class IPFSDownload : MonoBehaviour
 {
+
+    public NotificationUI notificationUI;
     private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token qui
     private const string BASE_URL = "https://api.pinata.cloud/v3/files/public/"; // URL base per l'endpoint get-file-by-id
     private const string GATEWAY = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/";
@@ -20,17 +23,18 @@ public class IPFSDownload : MonoBehaviour
 
 
 
-    private void Start()
+    private void Awake()//Per prendere le referenze prima di disattivare gli oggetti allo Start
     {
         boards = new List<BoardController>(FindObjectsOfType<BoardController>());
         groupListUI = FindObjectOfType<GroupListUI>();
+        notificationUI = FindObjectOfType<NotificationUI>();
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F))
         {
-            Debug.Log("Tasto Premuto");
+            groupListUI.gameObject.SetActive(true);
             // Inserisci il tuo CID (file hash) per fare la richiesta al file specifico
             string fileHash = "0195d21f-5021-7d38-9991-9c4d8514ca0a"; // Esempio, sostituiscilo con il tuo hash
             //StartCoroutine(DownloadFileById(fileHash));
@@ -49,6 +53,10 @@ public class IPFSDownload : MonoBehaviour
     public IEnumerator DownloadImageFromCid(string cid)
     {
         newLesson.Clear();//Pulisco in caso di utilizzo passato
+
+        if (notificationUI != null)
+            notificationUI.Show("Download in corso...");
+
         if (cid != null)
         {                    
         string imageUrl = GATEWAY + cid;
@@ -68,6 +76,10 @@ public class IPFSDownload : MonoBehaviour
                 {
                     renderer.material = mat;
                     Debug.Log("Immagine caricata e applicata!");
+
+                    if (notificationUI != null)
+                        notificationUI.Show("Download completato con successo!");
+
                 }
                 //Aggiungo al buffer
                 newLesson.Add(mat);
@@ -91,6 +103,10 @@ public class IPFSDownload : MonoBehaviour
             else
             {
                 Debug.LogError("Errore nel download dell'immagine: " + webRequest.error);
+
+                if (notificationUI != null)
+                    notificationUI.Show("Errore durante il download: " + webRequest.error);
+
             }
         }
         else

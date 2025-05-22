@@ -9,6 +9,11 @@ public class GroupListUI : MonoBehaviour
     public Transform contentPanel;
     public IPFSDownload downloadManager;
 
+    public void Start()
+    {
+        this.gameObject.SetActive(false);
+    }
+
     public void ShowGroups(List<Group> gruppi)
     {
         if (buttonPrefab == null)
