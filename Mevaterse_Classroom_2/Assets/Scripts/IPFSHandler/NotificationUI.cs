@@ -13,13 +13,17 @@ public class NotificationUI : MonoBehaviour
         notificationText = transform.Find("Notification_Text")?.GetComponent<TextMeshProUGUI>();
 
         // Trova il pulsante di chiusura
-        closeButton = transform.Find("Notification_Close")?.GetComponent<Button>();
+        closeButton = transform.Find("Notification_Close")?.GetComponent<Button>();    
 
         // Assicura che funzioni anche se elementi non trovati
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
     }
 
+    public void Start()
+    {
+        Hide();
+    }
     public void Show(string message)
     {
         if (notificationText != null)

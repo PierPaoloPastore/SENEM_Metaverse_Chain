@@ -142,5 +142,6 @@ public class BoardController : MonoBehaviourPunCallbacks, IPunObservable
         current = 0;
         ChangeSlideRpc(current);
         Debug.Log($"Slides aggiornate: {slides.Count} elementi copiati.");
+        
     }
 }

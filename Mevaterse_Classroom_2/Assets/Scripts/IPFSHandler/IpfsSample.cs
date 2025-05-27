@@ -36,7 +36,7 @@ public class IpfsSample : MonoBehaviour, ISample
     #region Methods
 
     /// <summary>
-    /// Uploads an image selected by the user to IPFS
+    ///Carica una i
     /// </summary>
     public async Task<string> IPFSUploadImage()
     {

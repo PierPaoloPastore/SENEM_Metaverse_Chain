@@ -60,7 +60,6 @@ public class IPFSDownload : MonoBehaviour
                 {
                     renderer.material = mat;
                     Debug.Log("Immagine caricata e applicata!");
-                    notificationUI?.Show("Download completato con successo!");
                 }
 
                 newLesson.Add(mat);
@@ -143,6 +142,9 @@ public class IPFSDownload : MonoBehaviour
                 Debug.Log($"Scarico immagine: {file.name} (CID: {file.cid})");
                 StartCoroutine(DownloadImageFromCid(file.cid));
             }
+            
+
+
         }
     }
 }

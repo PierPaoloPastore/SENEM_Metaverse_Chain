@@ -58,7 +58,15 @@ public class GroupListUI : MonoBehaviour
             {
                 Debug.Log("Selezionato gruppo: " + selectedGroup.name);
                 downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
+                // Nasconde il pannello dei gruppi dopo il click
+                this.gameObject.SetActive(false);
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+
             });
+            //Libero il cursore 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
     }
