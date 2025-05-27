@@ -51,11 +51,16 @@ public class GroupListUI : MonoBehaviour
 
             txt.text = gruppo.name;
 
+            // Crea una copia locale del gruppo per evitare il problema del closure
+            Group selectedGroup = gruppo;
+
             btn.onClick.AddListener(() =>
             {
-                Debug.Log("Selezionato gruppo: " + gruppo.name);
-                downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(gruppo.id));
+                Debug.Log("Selezionato gruppo: " + selectedGroup.name);
+                downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
             });
         }
+
     }
 }
+
