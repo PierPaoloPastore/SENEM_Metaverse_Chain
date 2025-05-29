@@ -7,7 +7,7 @@ public class GroupListUI : MonoBehaviour
 {
     public GameObject buttonPrefab;
     public Transform contentPanel;
-    public IPFSDownload downloadManager;
+    public IPFSLessonDownloader downloadManager;
 
     public void Start()
     {

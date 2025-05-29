@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 using TMPro;
 using Newtonsoft.Json;
 
-public class IPFSDownload : MonoBehaviour
+public class IPFSLessonDownloader : MonoBehaviour
 {
     public NotificationUI notificationUI;
     private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token
@@ -26,15 +26,27 @@ public class IPFSDownload : MonoBehaviour
         notificationUI = FindObjectOfType<NotificationUI>();
     }
 
-    // Attiva la UI della lista gruppi e inizia il recupero dei gruppi da Pinata
-    void Update()
+    //Creo listener che all'apertura del pannello di download, scarica i gruppi e lo popola
+    private void OnEnable()
     {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            groupListUI.gameObject.SetActive(true);
-            StartCoroutine(GetGroups());
-        }
+        LessonStorageUIController.OnPanelDownloadOpened += HandlePanelOpened;
     }
+
+    private void OnDisable()
+    {
+        LessonStorageUIController.OnPanelDownloadOpened -= HandlePanelOpened;
+    }
+
+    private void HandlePanelOpened()
+    {
+        if (groupListUI != null)
+            groupListUI.gameObject.SetActive(true);
+
+        StartCoroutine(GetGroups());
+    }
+
+
+
 
     // Scarica un'immagine da IPFS tramite CID e la applica come texture; restituisce IEnumerator
     public IEnumerator DownloadImageFromCid(string cid)
