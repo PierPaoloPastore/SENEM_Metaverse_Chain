@@ -22,9 +22,12 @@ public class IPFSLessonDownloader : MonoBehaviour
     private void Awake()
     {
         boards = new List<BoardController>(FindObjectsOfType<BoardController>());
-        groupListUI = FindObjectOfType<GroupListUI>();
-        notificationUI = FindObjectOfType<NotificationUI>();
+
+        var ui = UIReferenceManager.Instance;
+        groupListUI = ui.groupListUI;
+        notificationUI = ui.notificationUI;
     }
+
 
     //Creo listener che all'apertura del pannello di download, scarica i gruppi e lo popola
     private void OnEnable()

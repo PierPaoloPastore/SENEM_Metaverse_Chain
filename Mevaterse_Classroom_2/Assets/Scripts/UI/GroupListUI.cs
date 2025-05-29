@@ -9,6 +9,13 @@ public class GroupListUI : MonoBehaviour
     public Transform contentPanel;
     public IPFSLessonDownloader downloadManager;
 
+    private void Awake()
+    {
+        downloadManager = UIReferenceManager.Instance.GetComponent<IPFSLessonDownloader>();
+    }
+
+
+
     public void Start()
     {
         this.gameObject.SetActive(false);

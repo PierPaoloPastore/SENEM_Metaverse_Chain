@@ -22,10 +22,12 @@ public class IPFSLessonUploader : MonoBehaviour
 
     void Awake()
     {
-        panelUpload = GameObject.Find("Panel_FileManager_Upload");
-        buttonUploadFolder = GameObject.Find("ButtonUploadFolder").GetComponent<Button>();
-        buttonUploadSlide = GameObject.Find("ButtonUploadSlide").GetComponent<Button>();
-        uiController = FindObjectOfType<LessonStorageUIController>();
+        var ui = UIReferenceManager.Instance;
+
+        panelUpload = ui.panelUpload;
+        buttonUploadFolder = ui.buttonUploadFolder;
+        buttonUploadSlide = ui.buttonUploadSlide;
+        uiController = ui.lessonStorageUI;
 
         panelUpload.SetActive(false);
 
@@ -33,7 +35,24 @@ public class IPFSLessonUploader : MonoBehaviour
         buttonUploadSlide.onClick.AddListener(UploadSingleSlide);
     }
 
-    void Start() => panelUpload.SetActive(false);
+    private void OnEnable()
+    {
+        LessonStorageUIController.OnPanelUploadOpened += HandlePanelOpened;
+    }
+
+    private void OnDisable()
+    {
+        LessonStorageUIController.OnPanelUploadOpened -= HandlePanelOpened;
+    }
+
+    private void HandlePanelOpened()
+    {
+        panelUpload.SetActive(true); // questo è ridondante, ma lo lasciamo per sicurezza
+        /*Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;*/
+    }
+
+
 
     /* ----------  LOGICA UPLOAD  ---------- */
 
