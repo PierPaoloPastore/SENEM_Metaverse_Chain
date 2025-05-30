@@ -15,7 +15,7 @@ public class IPFSLessonUploader : MonoBehaviour
 
     private LessonStorageUIController uiController;
 
-    void Awake()
+    void Start()
     {
         var ui = UIReferenceManager.Instance;
 

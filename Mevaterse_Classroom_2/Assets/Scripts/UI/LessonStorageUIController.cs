@@ -13,11 +13,7 @@ public class LessonStorageUIController : MonoBehaviour
     public GameObject panelDownload;
 
     private readonly List<GameObject> uiPanels = new List<GameObject>();
-
-  
-
-
-    void Awake()
+    void Start()
     {
         var ui = UIReferenceManager.Instance;
         panelUpload = ui.panelUpload;

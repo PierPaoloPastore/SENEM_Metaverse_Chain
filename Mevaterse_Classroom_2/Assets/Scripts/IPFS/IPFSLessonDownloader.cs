@@ -18,7 +18,8 @@ public class IPFSLessonDownloader : MonoBehaviour
     private List<BoardController> boards = new List<BoardController>();
     public List<Group> gruppi = new List<Group>(); // Ogni gruppo su Pinata equivale ad una lezione
 
-    void Awake()
+    
+    void Start()
     {
         var ui = UIReferenceManager.Instance;
         groupListUI = ui.groupListUI;

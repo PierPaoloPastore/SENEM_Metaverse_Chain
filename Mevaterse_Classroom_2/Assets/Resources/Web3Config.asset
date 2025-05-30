@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Web3Config
   m_EditorClassIdentifier: 
   <ProjectId>k__BackingField: c947f386-a0d3-4b87-be46-cdafbae87baa
-  <EnableAnalytics>k__BackingField: 1
+  <EnableAnalytics>k__BackingField: 0
   <ChainConfigs>k__BackingField:
   - <ChainId>k__BackingField: 11155111
     <Symbol>k__BackingField: ETH
