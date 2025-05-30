@@ -9,7 +9,11 @@ public class GroupListUI : MonoBehaviour
     public Transform contentPanel;
     public IPFSLessonDownloader downloadManager;
 
-   
+    public enum GroupSelectionMode { Download, Upload }
+    public GroupSelectionMode currentMode = GroupSelectionMode.Download;
+    public System.Action<Group> OnGroupSelected;
+
+
     public void Start()
     {
         downloadManager = UIReferenceManager.Instance.ipfsLessonDownloader;
@@ -18,8 +22,11 @@ public class GroupListUI : MonoBehaviour
         this.gameObject.SetActive(false);
     }
 
-    public void ShowGroups(List<Group> gruppi)
+    //Data una lista di gruppi, istanzia un bottone per ogni gruppo trovato
+    public void ShowGroups(List<Group> gruppi, GroupSelectionMode mode = GroupSelectionMode.Download)
     {
+        currentMode = mode;
+
         if (buttonPrefab == null)
         {
             Debug.LogError("buttonPrefab è null! Assegna il prefab nell'Inspector.");
@@ -61,16 +68,27 @@ public class GroupListUI : MonoBehaviour
             btn.onClick.AddListener(() =>
             {
                 Debug.Log("Selezionato gruppo: " + selectedGroup.name);
-                downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
-                // Nasconde il pannello dei gruppi dopo il click
-                this.gameObject.SetActive(false);
 
+                // SE sei in modalità download
+                if (currentMode == GroupSelectionMode.Download && downloadManager != null && downloadManager.enabled)
+                {
+                    downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
+                }
+
+                // SE sei in modalità upload, chiama la callback solo in quella modalità
+                if (currentMode == GroupSelectionMode.Upload && OnGroupSelected != null)
+                {
+                    OnGroupSelected(selectedGroup);
+                    OnGroupSelected = null;
+                }
+
+                this.gameObject.SetActive(false);
                 CursorManager.Instance.HideCursor();
             });
-            //Libero il cursore 
+
             CursorManager.Instance.ShowCursor();
         }
-
     }
+
 }
 

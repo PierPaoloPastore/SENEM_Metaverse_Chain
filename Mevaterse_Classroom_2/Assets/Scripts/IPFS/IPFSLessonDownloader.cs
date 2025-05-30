@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 public class IPFSLessonDownloader : MonoBehaviour
 {
     public NotificationUI notificationUI;
-    private const string BEARER_Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1Y2QyNTllOC1mZDQ4LTQ0MzktYWY3MC0zYTU3ZmZlYjcxMWYiLCJlbWFpbCI6InBpZXJwaWVsZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYmQ1NzRmYzlkNWJkODNjYjVlODAiLCJzY29wZWRLZXlTZWNyZXQiOiIyNjlmM2I2YWIxZjhhMGE2YTcyZjQzMDYzYjQ3YjYwY2UzMGZiMDFmYzUxYjk1NWFlYmVjYzFjYjFhYTlhNzNjIiwiZXhwIjoxNzc0NjE1NzEyfQ.wn_AidOK3c1aB5ZUymn_LTgSWNd3J-av8Md7M0l3fXY"; // Inserisci il tuo Bearer Token
     private const string BASE_URL = "https://api.pinata.cloud/v3/files/public/";
     private const string GATEWAY = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/";//Inserire il proprio gateway
 
@@ -104,7 +103,8 @@ public class IPFSLessonDownloader : MonoBehaviour
         string url = "https://api.pinata.cloud/v3/groups/public";
 
         UnityWebRequest request = UnityWebRequest.Get(url);
-        request.SetRequestHeader("Authorization", "Bearer " + BEARER_Token);
+        request.SetRequestHeader("Authorization", "Bearer " + PinataAPIManager.Instance.BearerToken);
+
 
         yield return request.SendWebRequest();
 
@@ -122,7 +122,8 @@ public class IPFSLessonDownloader : MonoBehaviour
             {
                 Debug.Log($"Gruppo trovato: {g.name} (ID: {g.id})");
             }
-            groupListUI.ShowGroups(gruppi);
+            groupListUI.ShowGroups(gruppi, GroupListUI.GroupSelectionMode.Download);
+
         }
     }
 
@@ -132,7 +133,8 @@ public class IPFSLessonDownloader : MonoBehaviour
         string url = $"https://api.pinata.cloud/v3/files/public?group={groupId}";
 
         UnityWebRequest request = UnityWebRequest.Get(url);
-        request.SetRequestHeader("Authorization", "Bearer " + BEARER_Token);
+        request.SetRequestHeader("Authorization", "Bearer " + PinataAPIManager.Instance.BearerToken);
+
 
         yield return request.SendWebRequest();
 
@@ -150,9 +152,13 @@ public class IPFSLessonDownloader : MonoBehaviour
             FileResponse fileResponse = JsonConvert.DeserializeObject<FileResponse>(json);
             var files = fileResponse.data.files;
 
+            files.Sort((a, b) => a.name.CompareTo(b.name)); // Ordina per nome crescente (se i nomi sono 1, 2, 3...)
+
+
             //Svuota la lista una sola volta
             newLesson.Clear();
 
+                
             int total = files.Count;
             int completed = 0;
 

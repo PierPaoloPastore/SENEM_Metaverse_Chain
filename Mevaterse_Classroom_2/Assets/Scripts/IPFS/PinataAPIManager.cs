@@ -10,6 +10,7 @@ public class PinataAPIManager : MonoBehaviour
 
     [Header("Configurazione API")]
     [SerializeField] private string bearerToken;
+    public string BearerToken => bearerToken;//Getter pubblico
     [SerializeField] private string baseUrl = "https://api.pinata.cloud/v3";
     [SerializeField] private string publicGateway = "https://scarlet-generous-vulture-659.mypinata.cloud/ipfs/";
 

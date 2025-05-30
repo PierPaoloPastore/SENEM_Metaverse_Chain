@@ -14,9 +14,6 @@ public class IPFSLessonUploader : MonoBehaviour
     public Button buttonUploadSlide;
 
     private LessonStorageUIController uiController;
-
-    public string bearerToken = "INSERISCI_IL_TUO_BEARER_TOKEN";
-
     private const string apiUrlGroups = "https://api.pinata.cloud/v3/groups/public";
     private const string apiUrlFiles = "https://uploads.pinata.cloud/v3/files";
 
@@ -74,7 +71,7 @@ public class IPFSLessonUploader : MonoBehaviour
             uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody)),
             downloadHandler = new DownloadHandlerBuffer()
         };
-        request.SetRequestHeader("Authorization", "Bearer " + bearerToken);
+        request.SetRequestHeader("Authorization", "Bearer " + PinataAPIManager.Instance.BearerToken);
         request.SetRequestHeader("Content-Type", "application/json");
 
         yield return request.SendWebRequest();
@@ -140,6 +137,8 @@ public class IPFSLessonUploader : MonoBehaviour
 
     IEnumerator UploadSingleFile(string filePath, string fileName, string groupId)
     {
+        Debug.Log($"ENTRO in UploadSingleFile con: {filePath}, {fileName}, {groupId}");
+
         byte[] fileBytes = File.ReadAllBytes(filePath);
         string boundary = "----Boundary" + System.DateTime.Now.Ticks.ToString("x");
 
@@ -177,22 +176,125 @@ public class IPFSLessonUploader : MonoBehaviour
             uploadHandler = new UploadHandlerRaw(formBody.ToArray()),
             downloadHandler = new DownloadHandlerBuffer()
         };
-        request.SetRequestHeader("Authorization", $"Bearer {bearerToken}");
+        request.SetRequestHeader("Authorization", $"Bearer {PinataAPIManager.Instance.BearerToken}");
         request.SetRequestHeader("Content-Type", $"multipart/form-data; boundary={boundary}");
 
         yield return request.SendWebRequest();
 
-        if (request.result != UnityWebRequest.Result.Success)
+        if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"Errore caricamento {fileName}: {request.error}");
-            Debug.LogError("Risposta server: " + request.downloadHandler.text);
+            Debug.Log($"Slide caricata: {fileName}");
+
+            Debug.Log("Risposta server: " + request.downloadHandler.text);
+
+
+            // MOSTRA NOTIFICA
+            var notificationUI = UIReferenceManager.Instance.notificationUI;
+            if (notificationUI != null)
+                notificationUI.Show("Slide caricata con successo!");
+
         }
         else
         {
-            Debug.Log($"Slide caricata: {fileName}");
+            Debug.LogError($"Errore caricamento {fileName}: {request.error}");
+            Debug.LogError("Risposta server: " + request.downloadHandler.text);
+
+            // (Opzionale: notifica errore)
+            var notificationUI = UIReferenceManager.Instance.notificationUI;
+            if (notificationUI != null)
+                notificationUI.Show("Errore durante l'upload della slide!");
         }
+
     }
 
-    /* ----------  Stub futura slide singola  ---------- */
-    void UploadSingleSlide() => Debug.Log("Funzione caricamento singola slide (da implementare).");
+
+    void UploadSingleSlide()
+    {
+        var groupListUI = UIReferenceManager.Instance.groupListUI;
+        var panelUpload = UIReferenceManager.Instance.panelUpload;
+
+        if (groupListUI == null || panelUpload == null)
+        {
+            Debug.LogError("UI non trovata!");
+            return;
+        }
+
+        // Nascondi il pannello upload
+        panelUpload.SetActive(false);
+
+        // Mostra la selezione gruppi aggiornata
+        StartCoroutine(ShowGroupSelectionForSingleSlide());
+    }
+    IEnumerator ShowGroupSelectionForSingleSlide()
+    {
+        var downloader = UIReferenceManager.Instance.ipfsLessonDownloader;
+        var groupListUI = UIReferenceManager.Instance.groupListUI;
+        bool done = false;
+        List<Group> gruppi = null;
+
+        yield return downloader.StartCoroutine(
+            PinataAPIManager.Instance.GetGroups(
+                (g) => { gruppi = g; done = true; },
+                (err) => { Debug.LogError("Errore nel caricare i gruppi: " + err); done = true; }
+            )
+        );
+        while (!done) yield return null;
+
+        if (gruppi == null || gruppi.Count == 0)
+        {
+            Debug.LogWarning("Nessun gruppo trovato.");
+            // (eventualmente riapri il pannello upload qui)
+            yield break;
+        }
+
+        // ATTIVA il pannello gruppi (fondamentale!)
+        groupListUI.gameObject.SetActive(true);
+
+        // Mostra la lista gruppi aggiornata
+        groupListUI.ShowGroups(gruppi, GroupListUI.GroupSelectionMode.Upload);
+
+
+        groupListUI.OnGroupSelected = (Group selectedGroup) =>
+        {
+            StartCoroutine(UploadSlideWithProgressive(selectedGroup));
+            groupListUI.gameObject.SetActive(false);
+        };
+
+    }
+    IEnumerator UploadSlideWithProgressive(Group selectedGroup)
+    {
+        var paths = SFB.StandaloneFileBrowser.OpenFilePanel("Seleziona una slide", "", "jpg", false);
+        if (paths.Length == 0 || string.IsNullOrEmpty(paths[0])) yield break;
+        string filePath = paths[0];
+
+        // Scarica la lista file già presenti
+        List<PinataFile> files = null;
+        bool done = false;
+        yield return StartCoroutine(
+            PinataAPIManager.Instance.GetFilesInGroup(
+                selectedGroup.id,
+                (f) => { files = f; done = true; },
+                (err) => { Debug.LogError("Errore lista file: " + err); done = true; }
+            )
+        );
+        while (!done) yield return null;
+
+        int nextIndex = (files != null ? files.Count : 0) + 1;
+
+        string raw = System.IO.Path.GetFileNameWithoutExtension(filePath);
+        string safe = System.Text.RegularExpressions.Regex.Replace(raw, @"[^a-zA-Z0-9_\-]", "_");
+        string fname = $"{selectedGroup.name}_{nextIndex}_{safe}{System.IO.Path.GetExtension(filePath).ToLower()}";
+        Debug.Log($"Chiamo UploadSingleFile con: {filePath}, {fname}, {selectedGroup.id}");
+
+        yield return StartCoroutine(UploadSingleFile(filePath, fname, selectedGroup.id));
+
+        // Mostra notifica finale
+        var notificationUI = UIReferenceManager.Instance.notificationUI;
+        if (notificationUI != null)
+            notificationUI.Show("Slide caricata con successo!");
+    }
+
+
+
+
 }
