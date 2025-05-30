@@ -47,7 +47,7 @@ public class PinataAPIManager : MonoBehaviour
 
     public IEnumerator GetFilesInGroup(string groupId, System.Action<List<PinataFile>> onSuccess, System.Action<string> onError = null)
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{baseUrl}/files/public?group={groupId}");
+        UnityWebRequest request = UnityWebRequest.Get($"{baseUrl}/files/public?group={groupId}&limit=420");
         request.SetRequestHeader("Authorization", "Bearer " + bearerToken);
 
         yield return request.SendWebRequest();
@@ -62,4 +62,5 @@ public class PinataAPIManager : MonoBehaviour
             onSuccess?.Invoke(response.data.files);
         }
     }
+
 }
