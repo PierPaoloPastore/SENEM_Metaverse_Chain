@@ -17,8 +17,8 @@ MonoBehaviour:
   <ChainConfigs>k__BackingField:
   - <ChainId>k__BackingField: 11155111
     <Symbol>k__BackingField: ETH
-    <Chain>k__BackingField: Sepolia
+    <Chain>k__BackingField: Ethereum Sepolia
     <Network>k__BackingField: ETH
-    <Rpc>k__BackingField: https://rpc.sepolia.org
-    <Ws>k__BackingField: wss://sepolia.infura.io/v3/${d011ca708b824a6cae996315a6fd0396}
+    <Rpc>k__BackingField: https://ethereum-sepolia.core.chainstack.com/12bc916a339e6bce6835232c4415e422
+    <Ws>k__BackingField: wss://ethereum-sepolia.core.chainstack.com/12bc916a339e6bce6835232c4415e422
     <BlockExplorerUrl>k__BackingField: https://sepolia.etherscan.io
