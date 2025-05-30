@@ -16,6 +16,8 @@ public class UIReferenceManager : MonoBehaviour
     public GroupListUI groupListUI;
     public NotificationUI notificationUI;
     public LessonStorageUIController lessonStorageUI;
+    public IPFSLessonDownloader ipfsLessonDownloader;
+
     [Header("Stato della sessione")]
     public bool isInRoom = false;
 
@@ -39,5 +41,7 @@ public class UIReferenceManager : MonoBehaviour
         groupListUI = FindObjectOfType<GroupListUI>();
         notificationUI = FindObjectOfType<NotificationUI>();
         lessonStorageUI = FindObjectOfType<LessonStorageUIController>();
+        ipfsLessonDownloader = FindObjectOfType<IPFSLessonDownloader>();
+
     }
 }

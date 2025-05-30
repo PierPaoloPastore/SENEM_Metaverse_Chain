@@ -56,8 +56,9 @@ public class LessonStorageUIController : MonoBehaviour
         if (panel == null || !panel.activeSelf) return;
 
         panel.SetActive(false);
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+
+        CursorManager.Instance.HideCursor();
+
     }
 
 
@@ -72,8 +73,12 @@ public class LessonStorageUIController : MonoBehaviour
             ui.SetActive(false);
 
         panel.SetActive(!isActive);
+       
+        //Gestione del cursore
+        if (!isActive)
+            CursorManager.Instance.ShowCursor();
+        else
+            CursorManager.Instance.HideCursor();
 
-        Cursor.lockState = !isActive ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = !isActive;
     }
 }

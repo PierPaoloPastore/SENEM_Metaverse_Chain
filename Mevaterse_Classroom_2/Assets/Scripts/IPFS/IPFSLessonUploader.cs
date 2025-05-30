@@ -93,33 +93,50 @@ public class IPFSLessonUploader : MonoBehaviour
 
     IEnumerator CaricaSlides(string[] filePaths, string lessonName, string groupId)
     {
-        int index = 1;
+        var notificationUI = UIReferenceManager.Instance.notificationUI;
+
+        // Filtra solo i file jpg
+        List<string> validFiles = new List<string>();
         foreach (var path in filePaths)
         {
-            if (!File.Exists(path)) continue;
+            if (File.Exists(path))
+            {
+                var ext = Path.GetExtension(path).ToLower();
+                if (ext == ".jpg" || ext == ".jpeg")
+                    validFiles.Add(path);
+            }
+        }
+        int total = validFiles.Count;
+        int completed = 0;
 
-            var ext = Path.GetExtension(path).ToLower();
-            if (ext != ".jpg" && ext != ".jpeg") continue;
-
+        int index = 1;
+        foreach (var path in validFiles)
+        {
             var raw = Path.GetFileNameWithoutExtension(path);
             var safe = System.Text.RegularExpressions.Regex.Replace(raw, @"[^a-zA-Z0-9_\-]", "_");
-            var fname = $"{lessonName}_{index++}_{safe}{ext}";
+            var fname = $"{lessonName}_{index++}_{safe}{Path.GetExtension(path).ToLower()}";
+
+            // Aggiorna la notifica PRIMA di iniziare l’upload di questo file
+            if (notificationUI != null)
+                notificationUI.Show($"Caricamento slide {completed + 1}/{total}...");
 
             yield return StartCoroutine(UploadSingleFile(path, fname, groupId));
+
+            completed++;
         }
 
-        Debug.Log("Tutti i file sono stati caricati.");
+        if (notificationUI != null)
+            notificationUI.Show("Upload completato!");
 
+        // Chiudi il pannello upload dopo l'upload
         if (uiController != null)
-        {
-            uiController.TogglePanel(panelUpload); // Chiude il pannello
+            uiController.TogglePanel(panelUpload);
 
-            // Nasconde il cursore e restituisce il controllo
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        // Nascondi il cursore
+        CursorManager.Instance.HideCursor();
 
     }
+
 
     IEnumerator UploadSingleFile(string filePath, string fileName, string groupId)
     {

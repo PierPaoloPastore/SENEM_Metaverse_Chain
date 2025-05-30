@@ -54,10 +54,6 @@ public class IPFSLessonDownloader : MonoBehaviour
     // Scarica un'immagine da IPFS tramite CID e la applica come texture; restituisce IEnumerator
     public IEnumerator DownloadImageFromCid(string cid)
     {
-        newLesson.Clear();
-
-        notificationUI?.Show("Download in corso...");
-
         if (!string.IsNullOrEmpty(cid))
         {
             string imageUrl = GATEWAY + cid;
@@ -143,6 +139,7 @@ public class IPFSLessonDownloader : MonoBehaviour
         if (request.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError("Errore nel recupero file: " + request.error);
+            notificationUI?.Show("Errore nel recupero file.");
         }
         else
         {
@@ -151,15 +148,25 @@ public class IPFSLessonDownloader : MonoBehaviour
             Debug.Log(json);
 
             FileResponse fileResponse = JsonConvert.DeserializeObject<FileResponse>(json);
+            var files = fileResponse.data.files;
 
-            foreach (var file in fileResponse.data.files)
+            //Svuota la lista una sola volta
+            newLesson.Clear();
+
+            int total = files.Count;
+            int completed = 0;
+
+            foreach (var file in files)
             {
-                Debug.Log($"Scarico immagine: {file.name} (CID: {file.cid})");
-                StartCoroutine(DownloadImageFromCid(file.cid));
+                completed++;
+                notificationUI?.Show($"Download slide {completed}/{total}...");
+
+                // Aspetta il completamento di ogni download prima di procedere
+                yield return StartCoroutine(DownloadImageFromCid(file.cid));
             }
-            
 
-
+            notificationUI?.Show("Download completato!");
         }
     }
+
 }

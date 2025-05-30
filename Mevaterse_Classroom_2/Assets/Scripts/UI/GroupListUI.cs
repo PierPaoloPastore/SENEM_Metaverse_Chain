@@ -9,15 +9,12 @@ public class GroupListUI : MonoBehaviour
     public Transform contentPanel;
     public IPFSLessonDownloader downloadManager;
 
-    private void Awake()
-    {
-        downloadManager = UIReferenceManager.Instance.GetComponent<IPFSLessonDownloader>();
-    }
-
-
-
+   
     public void Start()
     {
+        downloadManager = UIReferenceManager.Instance.ipfsLessonDownloader;
+
+
         this.gameObject.SetActive(false);
     }
 
@@ -67,13 +64,11 @@ public class GroupListUI : MonoBehaviour
                 downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
                 // Nasconde il pannello dei gruppi dopo il click
                 this.gameObject.SetActive(false);
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
 
+                CursorManager.Instance.HideCursor();
             });
             //Libero il cursore 
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            CursorManager.Instance.ShowCursor();
         }
 
     }
