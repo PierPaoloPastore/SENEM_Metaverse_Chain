@@ -30,6 +30,6 @@ MonoBehaviour:
   handlerPrefab: {fileID: 5250797134093199901, guid: 0c7c312ad6c521f4b8346ed8e9d7c664, type: 3}
   enabledWallets: []
   disabledWallets: []
-  <LogLevel>k__BackingField: 1
+  <LogLevel>k__BackingField: 2
   <WalletLocationOption>k__BackingField: 0
   <ConnectButtonRow>k__BackingField: {fileID: 8599114313589093787, guid: 4591cfadb2bf9824da90ebf4005728a8, type: 3}
