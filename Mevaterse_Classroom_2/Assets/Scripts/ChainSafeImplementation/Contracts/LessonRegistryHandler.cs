@@ -5,6 +5,7 @@ using ChainSafe.Gaming.Evm.Contracts.Custom;
 using ChainSafe.Gaming.Web3;
 using ChainSafe.Gaming.UnityPackage;
 
+//Gestore del Contratto LessonRegistry.sol
 public class LessonRegistryHandler : MonoBehaviour
 {
     [Header("Configurazione contratto")]
@@ -27,39 +28,33 @@ public class LessonRegistryHandler : MonoBehaviour
     private async void OnWeb3Initialized((Web3 web3, bool isLightweight) context)
     {
         this.web3 = context.web3;
+        await DisposeContract();
 
+        lessonRegistry = await BuildWithRetry(contractAddress);
         if (lessonRegistry != null)
-        {
-            await lessonRegistry.DisposeAsync();
-            lessonRegistry = null;
-        }
+            Debug.Log("[LessonRegistryHandler] Contratto istanziato correttamente.");
+    }
 
-        bool success = false;
-        int retryCount = 0;
-
-        while (!success && retryCount < 20)
+    private async Task<LessonRegistry> BuildWithRetry(string address, int maxRetries = 20, int delayMs = 500)
+    {
+        for (int i = 0; i < maxRetries; i++)
         {
             try
             {
-                lessonRegistry = await web3.ContractBuilder.Build<LessonRegistry>(contractAddress);
-                success = true;
-                Debug.Log("[LessonRegistryHandler] Contratto istanziato correttamente.");
+                return await web3.ContractBuilder.Build<LessonRegistry>(address);
             }
             catch
             {
-                Debug.LogWarning($"[LessonRegistryHandler] Tentativo {retryCount + 1}: signer non pronto. Riprovo...");
-                await Task.Delay(500);
-                retryCount++;
+                Debug.LogWarning($"[LessonRegistryHandler] Tentativo {i + 1}: signer non pronto. Riprovo...");
+                await Task.Delay(delayMs);
             }
         }
 
-        if (!success)
-        {
-            Debug.LogError("[LessonRegistryHandler] Errore: impossibile istanziare il contratto dopo vari tentativi.");
-        }
+        Debug.LogError("[LessonRegistryHandler] Errore: impossibile istanziare il contratto dopo vari tentativi.");
+        return null;
     }
 
-    private async void DisposeContract()
+    private async Task DisposeContract()
     {
         if (lessonRegistry != null)
         {
@@ -68,10 +63,7 @@ public class LessonRegistryHandler : MonoBehaviour
         }
     }
 
-    public bool IsReady()
-    {
-        return lessonRegistry != null;
-    }
+    public bool IsReady() => lessonRegistry != null;
 
     public async Task<(bool found, string cid, string uploader)> TryGetLesson(string lessonName)
     {
@@ -89,16 +81,17 @@ public class LessonRegistryHandler : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.Log($"[LessonRegistryHandler] Nessuna lezione trovata o errore: {ex.Message}");
+            Debug.Log($"[LessonRegistryHandler] GetLesson fallita per '{lessonName}': {ex.Message}");
             return (false, null, null);
         }
     }
 
-    public async Task<bool> RegisterLesson(string lessonName, string cid)
+    public async Task<bool> RegisterLesson(string lessonName, string cid, NotificationUI notificationUI = null)
     {
         if (lessonRegistry == null)
         {
             Debug.LogWarning("[LessonRegistryHandler] Contratto non inizializzato.");
+            notificationUI?.Show("Contratto non inizializzato.");
             return false;
         }
 
@@ -107,6 +100,7 @@ public class LessonRegistryHandler : MonoBehaviour
         if (check.found)
         {
             Debug.LogWarning($"[LessonRegistryHandler] Lezione '{lessonName}' già registrata. CID: {check.cid}");
+            notificationUI?.Show($"Lezione '{lessonName}' già registrata.");
             return false;
         }
 
@@ -115,6 +109,7 @@ public class LessonRegistryHandler : MonoBehaviour
         {
             var receipt = await lessonRegistry.RegisterLessonWithReceipt(lessonName, cid);
             Debug.Log($"[LessonRegistryHandler] Registrazione completata! TxHash: {receipt.TransactionHash}");
+            notificationUI?.Show("Lezione registrata con successo.");
             return true;
         }
         catch (Exception ex)
@@ -123,7 +118,10 @@ public class LessonRegistryHandler : MonoBehaviour
                 Debug.LogError("[LessonRegistryHandler] Il contratto ha rifiutato la transazione (revert). Probabilmente input non valido.");
             else
                 Debug.LogError($"[LessonRegistryHandler] Errore durante la registrazione: {ex.Message}");
+
+            notificationUI?.Show("Errore durante la registrazione.");
             return false;
         }
     }
+
 }

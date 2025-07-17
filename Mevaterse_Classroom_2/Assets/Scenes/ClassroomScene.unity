@@ -741,7 +741,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 66972530}
-  - component: {fileID: 66972529}
   - component: {fileID: 66972531}
   m_Layer: 0
   m_Name: BlockchainManager
@@ -750,21 +749,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &66972529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66972528}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82655ceab70d7404ab8403db93ab228d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  contractAddress: 0xIL_TUO_CONTRATTO
-  testLessonName: TestLesson
-  testCID: bafybeiexamplecid
 --- !u!4 &66972530
 Transform:
   m_ObjectHideFlags: 0
@@ -9033,6 +9017,7 @@ GameObject:
   - component: {fileID: 618736467}
   - component: {fileID: 618736469}
   - component: {fileID: 618736468}
+  - component: {fileID: 618736470}
   m_Layer: 0
   m_Name: UIHandler
   m_TagString: Untagged
@@ -9081,6 +9066,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panelUpload: {fileID: 325600107}
   panelDownload: {fileID: 1445616222}
+--- !u!114 &618736470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618736466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2b2ce880957f3341ba1c0c7bec9957f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilitato: 1
 --- !u!54 &623062995
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -16055,7 +16053,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 741206400449128260, guid: cee4edae25d8bec48be2bdf4687fc08f, type: 3}
       propertyPath: rememberMe
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1137403325278580770, guid: cee4edae25d8bec48be2bdf4687fc08f, type: 3}
       propertyPath: m_Name

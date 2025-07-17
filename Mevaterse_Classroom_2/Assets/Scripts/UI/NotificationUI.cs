@@ -31,7 +31,7 @@ public class NotificationUI : MonoBehaviour
 
         gameObject.SetActive(true);
         CancelInvoke(); // annulla eventuali chiamate precedenti
-        Invoke(nameof(Hide), 2f); // nasconde dopo 3 secondi
+        Invoke(nameof(Hide), 2f); // nasconde dopo 2 secondi
     }
 
 
