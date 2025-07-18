@@ -4,8 +4,9 @@ using UnityEngine;
 using ChainSafe.Gaming.Evm.Contracts.Custom;
 using ChainSafe.Gaming.Web3;
 using ChainSafe.Gaming.UnityPackage;
+using System.Collections;
 
-//Gestore del Contratto LessonRegistry.sol
+// Gestore del Contratto LessonRegistry.sol
 public class LessonRegistryHandler : MonoBehaviour
 {
     [Header("Configurazione contratto")]
@@ -65,24 +66,24 @@ public class LessonRegistryHandler : MonoBehaviour
 
     public bool IsReady() => lessonRegistry != null;
 
-    public async Task<(bool found, string cid, string uploader)> TryGetLesson(string lessonName)
+    public async Task<(bool found, string cid, string uploader, string lastEditor)> TryGetLesson(string lessonName)
     {
         if (lessonRegistry == null)
         {
             Debug.LogWarning("[LessonRegistryHandler] Contratto non inizializzato.");
-            return (false, null, null);
+            return (false, null, null, null);
         }
 
         try
         {
-            var (cid, uploader) = await lessonRegistry.GetLesson(lessonName);
-            Debug.Log($"[LessonRegistryHandler] Lezione trovata: {lessonName} -> CID: {cid}, Uploader: {uploader}");
-            return (true, cid, uploader);
+            var (cid, uploader, lastEditor) = await lessonRegistry.GetLesson(lessonName);
+            Debug.Log($"[LessonRegistryHandler] Lezione trovata: {lessonName} -> CID: {cid}, Uploader: {uploader}, Ultima modifica: {lastEditor}");
+            return (true, cid, uploader, lastEditor);
         }
         catch (Exception ex)
         {
             Debug.Log($"[LessonRegistryHandler] GetLesson fallita per '{lessonName}': {ex.Message}");
-            return (false, null, null);
+            return (false, null, null, null);
         }
     }
 
@@ -97,10 +98,10 @@ public class LessonRegistryHandler : MonoBehaviour
 
         // 1. Controllo esistenza
         var check = await TryGetLesson(lessonName);
-        if (check.found)
+        if (check.found && !string.IsNullOrEmpty(check.cid) && check.uploader != "0x0000000000000000000000000000000000000000")
         {
             Debug.LogWarning($"[LessonRegistryHandler] Lezione '{lessonName}' già registrata. CID: {check.cid}");
-            notificationUI?.Show($"Lezione '{lessonName}' già registrata.");
+            notificationUI?.Show("Lezione già registrata.");
             return false;
         }
 
@@ -122,6 +123,44 @@ public class LessonRegistryHandler : MonoBehaviour
             notificationUI?.Show("Errore durante la registrazione.");
             return false;
         }
+    }
+
+    public async Task<bool> UpdateLesson(string lessonName, string newCID, NotificationUI notificationUI = null)
+    {
+        if (lessonRegistry == null)
+        {
+            Debug.LogWarning("[LessonRegistryHandler] Contratto non inizializzato.");
+            notificationUI?.Show("Contratto non inizializzato.");
+            return false;
+        }
+
+        try
+        {
+            var receipt = await lessonRegistry.UpdateLessonWithReceipt(lessonName, newCID);
+            Debug.Log($"[LessonRegistryHandler] Lezione aggiornata! TxHash: {receipt.TransactionHash}");
+            notificationUI?.Show("Lezione aggiornata con successo.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("revert"))
+                Debug.LogError("[LessonRegistryHandler] Il contratto ha rifiutato la transazione (revert). Probabilmente input non valido.");
+            else
+                Debug.LogError($"[LessonRegistryHandler] Errore durante l'aggiornamento: {ex.Message}");
+
+            notificationUI?.Show("Errore durante l'aggiornamento.");
+            return false;
+        }
+    }
+
+    public IEnumerator TryGetLesson(string lessonName, Action<(string cid, string uploader)> onResult)
+    {
+        var task = TryGetLesson(lessonName);
+        while (!task.IsCompleted)
+            yield return null;
+
+        var result = task.Result;
+        onResult((result.cid, result.uploader));
     }
 
 }

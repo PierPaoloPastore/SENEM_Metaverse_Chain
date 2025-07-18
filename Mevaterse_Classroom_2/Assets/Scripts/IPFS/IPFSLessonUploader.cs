@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using ChainSafe.Gaming.Evm.Contracts.Custom;
 using SFB;
 
 public class IPFSLessonUploader : MonoBehaviour
@@ -98,7 +99,32 @@ public class IPFSLessonUploader : MonoBehaviour
             UIReferenceManager.Instance.notificationUI?.Show($"Caricamento slide {i + 1}/{validFiles.Count}...");
             yield return StartCoroutine(UploadFile(filePath, fileName, groupId));
         }
+        // ---------- REGISTRAZIONE SU BLOCKCHAIN ----------
+        var handler = FindObjectOfType<LessonRegistryHandler>();
+        if (handler != null && handler.IsReady())
+        {
+            bool done = false;
+            bool success = false;
 
+            var task = handler.RegisterLesson(lessonName, groupId)
+                .ContinueWith(t =>
+                {
+                    success = t.Result;
+                    done = true;
+                });
+
+            while (!done) yield return null;
+
+            if (success)
+                UIReferenceManager.Instance.notificationUI?.Show("Registrata anche su Blockchain!");
+            else
+                UIReferenceManager.Instance.notificationUI?.Show("Lezione già su Blockchain.");
+        }
+        else
+        {
+            Debug.LogWarning("LessonRegistryHandler non pronto o assente.");
+        }
+        // ---------- INTERAZIONE UI----------
         UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");
         uiController?.TogglePanel(panelUpload);
         CursorManager.Instance.HideCursor();

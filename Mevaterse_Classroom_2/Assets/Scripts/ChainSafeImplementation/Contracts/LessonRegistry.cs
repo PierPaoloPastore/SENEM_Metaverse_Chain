@@ -15,7 +15,7 @@ namespace ChainSafe.Gaming.Evm.Contracts.Custom
     {
         public string Address => OriginalContract.Address;
        
-        public string ABI => "[ 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			}, 			{ 				\"internalType\": \"string\", 				\"name\": \"cid\", 				\"type\": \"string\" 			} 		], 		\"name\": \"registerLesson\", 		\"outputs\": [], 		\"stateMutability\": \"nonpayable\", 		\"type\": \"function\" 	}, 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			} 		], 		\"name\": \"getLesson\", 		\"outputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"cid\", 				\"type\": \"string\" 			}, 			{ 				\"internalType\": \"address\", 				\"name\": \"uploader\", 				\"type\": \"address\" 			} 		], 		\"stateMutability\": \"view\", 		\"type\": \"function\" 	} ]";
+        public string ABI => "[ 	{ 		\"anonymous\": false, 		\"inputs\": [ 			{ 				\"indexed\": false, 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			}, 			{ 				\"indexed\": false, 				\"internalType\": \"string\", 				\"name\": \"cid\", 				\"type\": \"string\" 			}, 			{ 				\"indexed\": false, 				\"internalType\": \"address\", 				\"name\": \"uploader\", 				\"type\": \"address\" 			} 		], 		\"name\": \"LessonRegistered\", 		\"type\": \"event\" 	}, 	{ 		\"anonymous\": false, 		\"inputs\": [ 			{ 				\"indexed\": false, 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			}, 			{ 				\"indexed\": false, 				\"internalType\": \"string\", 				\"name\": \"newCID\", 				\"type\": \"string\" 			}, 			{ 				\"indexed\": false, 				\"internalType\": \"address\", 				\"name\": \"editor\", 				\"type\": \"address\" 			} 		], 		\"name\": \"LessonUpdated\", 		\"type\": \"event\" 	}, 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			}, 			{ 				\"internalType\": \"string\", 				\"name\": \"cid\", 				\"type\": \"string\" 			} 		], 		\"name\": \"registerLesson\", 		\"outputs\": [], 		\"stateMutability\": \"nonpayable\", 		\"type\": \"function\" 	}, 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			}, 			{ 				\"internalType\": \"string\", 				\"name\": \"newCID\", 				\"type\": \"string\" 			} 		], 		\"name\": \"updateLesson\", 		\"outputs\": [], 		\"stateMutability\": \"nonpayable\", 		\"type\": \"function\" 	}, 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			} 		], 		\"name\": \"exists\", 		\"outputs\": [ 			{ 				\"internalType\": \"bool\", 				\"name\": \"\", 				\"type\": \"bool\" 			} 		], 		\"stateMutability\": \"view\", 		\"type\": \"function\" 	}, 	{ 		\"inputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"name\", 				\"type\": \"string\" 			} 		], 		\"name\": \"getLesson\", 		\"outputs\": [ 			{ 				\"internalType\": \"string\", 				\"name\": \"cid\", 				\"type\": \"string\" 			}, 			{ 				\"internalType\": \"address\", 				\"name\": \"uploader\", 				\"type\": \"address\" 			}, 			{ 				\"internalType\": \"address\", 				\"name\": \"lastEditor\", 				\"type\": \"address\" 			} 		], 		\"stateMutability\": \"view\", 		\"type\": \"function\" 	} ]";
         
         public string ContractAddress { get; set; }
         
@@ -45,13 +45,40 @@ namespace ChainSafe.Gaming.Evm.Contracts.Custom
             return response.receipt;
         }
 
-        public async Task<(string cid, string uploader)> GetLesson(string name, TransactionRequest transactionOverwrite=null) 
+        public async Task UpdateLesson(string name, string newCID, TransactionRequest transactionOverwrite=null) 
+        {
+            var response = await OriginalContract.Send("updateLesson", new object [] {
+                name, newCID
+            }, transactionOverwrite);
+            
+            
+        }
+        public async Task<TransactionReceipt> UpdateLessonWithReceipt(string name, string newCID, TransactionRequest transactionOverwrite=null) 
+        {
+            var response = await OriginalContract.SendWithReceipt("updateLesson", new object [] {
+                name, newCID
+            }, transactionOverwrite);
+            
+            return response.receipt;
+        }
+
+        public async Task<bool> Exists(string name, TransactionRequest transactionOverwrite=null) 
+        {
+            var response = await OriginalContract.Call<bool>("exists", new object [] {
+                name
+            }, transactionOverwrite);
+            
+            return response;
+        }
+
+
+        public async Task<(string cid, string uploader, string lastEditor)> GetLesson(string name, TransactionRequest transactionOverwrite=null) 
         {
             var response = await OriginalContract.Call("getLesson", new object [] {
                 name
             }, transactionOverwrite);
             
-            return ((string)response[0], (string)response[1]);
+            return ((string)response[0], (string)response[1], (string)response[2]);
         }
 
 
@@ -60,6 +87,48 @@ namespace ChainSafe.Gaming.Evm.Contracts.Custom
         
         
         #region Event Classes
+
+        public partial class LessonRegisteredEventDTO : LessonRegisteredEventDTOBase { }
+        
+        [Event("LessonRegistered")]
+        public class LessonRegisteredEventDTOBase : IEventDTO
+        {
+                    [Parameter("string", "name", 0, false)]
+        public virtual string Name { get; set; }
+        [Parameter("string", "cid", 1, false)]
+        public virtual string Cid { get; set; }
+        [Parameter("address", "uploader", 2, false)]
+        public virtual string Uploader { get; set; }
+
+        }
+    
+        public event Action<LessonRegisteredEventDTO> OnLessonRegistered;
+        
+        private void LessonRegistered(LessonRegisteredEventDTO lessonRegistered)
+        {
+            OnLessonRegistered?.Invoke(lessonRegistered);
+        }
+
+        public partial class LessonUpdatedEventDTO : LessonUpdatedEventDTOBase { }
+        
+        [Event("LessonUpdated")]
+        public class LessonUpdatedEventDTOBase : IEventDTO
+        {
+                    [Parameter("string", "name", 0, false)]
+        public virtual string Name { get; set; }
+        [Parameter("string", "newCID", 1, false)]
+        public virtual string NewCID { get; set; }
+        [Parameter("address", "editor", 2, false)]
+        public virtual string Editor { get; set; }
+
+        }
+    
+        public event Action<LessonUpdatedEventDTO> OnLessonUpdated;
+        
+        private void LessonUpdated(LessonUpdatedEventDTO lessonUpdated)
+        {
+            OnLessonUpdated?.Invoke(lessonUpdated);
+        }
 
 
         #endregion
@@ -79,6 +148,10 @@ namespace ChainSafe.Gaming.Evm.Contracts.Custom
                 if(EventManager == null)
                     return;
 
+			await EventManager.Unsubscribe<LessonRegisteredEventDTO>(LessonRegistered, ContractAddress);
+			OnLessonRegistered = null;
+			await EventManager.Unsubscribe<LessonUpdatedEventDTO>(LessonUpdated, ContractAddress);
+			OnLessonUpdated = null;
 
             
             
@@ -99,6 +172,8 @@ namespace ChainSafe.Gaming.Evm.Contracts.Custom
                 if(EventManager == null)
                     return;
 
+                await EventManager.Subscribe<LessonRegisteredEventDTO>(LessonRegistered, ContractAddress);
+                await EventManager.Subscribe<LessonUpdatedEventDTO>(LessonUpdated, ContractAddress);
     
             }catch(Exception e)
             {
