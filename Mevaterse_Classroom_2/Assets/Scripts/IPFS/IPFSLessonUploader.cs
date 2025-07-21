@@ -5,6 +5,11 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using ChainSafe.Gaming.UnityPackage;
+using ChainSafe.Gaming.Web3;
+using ChainSafe.Gaming.Web3.Unity; 
+
+
 using ChainSafe.Gaming.Evm.Contracts.Custom;
 using SFB;
 
@@ -109,54 +114,19 @@ public class IPFSLessonUploader : MonoBehaviour
             UIReferenceManager.Instance.notificationUI?.Show($"Caricamento slide {i + 1}/{validFiles.Count}...");
             yield return StartCoroutine(UploadFile(filePath, fileName, groupId));
         }
-        // ---------- REGISTRAZIONE SU BLOCKCHAIN ----------
-        /*
-        var handler = FindObjectOfType<LessonRegistryHandler>();
-        if (handler != null && handler.IsReady())
-        {
-            bool done = false;
-            bool success = false;
-
-            var task = handler.RegisterLesson(lessonName, groupId)
-                .ContinueWith(t =>
-                {
-                    success = t.Result;
-                    done = true;
-                });
-
-            while (!done) yield return null;
-
-            if (success)
-                UIReferenceManager.Instance.notificationUI?.Show("Registrata anche su Blockchain!");
-            else
-                UIReferenceManager.Instance.notificationUI?.Show("Lezione già su Blockchain.");
-        }
-        else
-        {
-            Debug.LogWarning("LessonRegistryHandler non pronto o assente.");
-        }
-        */
-
-
-
-
-        // Salva i dati per la conferma //TEST DA RIMUOVERE SE NON VA
+        // ---------- REGISTRAZIONE SU BLOCKCHAIN ----------       
+        // Salva i dati per la conferma 
         ultimaLezione = lessonName;
         ultimoGroupId = groupId;
 
         // Chiedi conferma all’utente
         UIReferenceManager.Instance.notificationUI.ShowConfirmUpload();
 
-
-
-
         // ---------- INTERAZIONE UI----------
         UIReferenceManager.Instance.notificationUI.showConfirmAfterHide = true;
         //Quando terminerà la notifica, con questa flag verrà proposto di caricare su Blockchain
 
-        UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");
-       
-        //uiController?.TogglePanel(panelUpload);
+        UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");     
         CursorManager.Instance.HideCursor();
     }
 
@@ -329,20 +299,20 @@ public class IPFSLessonUploader : MonoBehaviour
     }
 
 
-    public void HandleUploadConfirmation(bool yes)
+    public async void HandleUploadConfirmation(bool yes)
     {
         if (!yes)
         {
             Debug.Log("L'utente ha scelto di NON registrare la lezione su blockchain.");
             return;
         }
-        /*
-        if (!WalletManager.Instance.IsWalletConnected())
+
+        //Controlla se un wallet è connesso o meno
+        if (!Web3Unity.Connected)
         {
             UIReferenceManager.Instance.notificationUI.Show("Collega prima il wallet e riprova.");
             return;
         }
-        */
 
         StartCoroutine(InviaTransazioneBlockchain(ultimaLezione, ultimoGroupId));
     }
