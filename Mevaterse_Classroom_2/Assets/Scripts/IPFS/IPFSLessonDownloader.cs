@@ -68,7 +68,45 @@ public class IPFSLessonDownloader : MonoBehaviour
             notificationUI?.Show("Nessuna lezione trovata!");
             yield break;
         }
+        //-------------LOGICA CHE VERIFICA SE LE LEZIONI SONO O MENO SU BLOCKCHAIN------------
+        // groupListUI.ShowGroups(gruppi, GroupListUI.GroupSelectionMode.Download);
+        gruppi = result ?? new List<Group>();
+        if (gruppi.Count == 0)
+        {
+            notificationUI?.Show("Nessuna lezione trovata!");
+            yield break;
+        }
+
+        // Step 1: Costruisci la lista dei gruppi validati interrogando la blockchain
+        HashSet<string> gruppiValidati = new HashSet<string>();
+        var handler = FindObjectOfType<LessonRegistryHandler>();
+        if (handler != null && handler.IsReady())
+        {
+            foreach (var g in gruppi)
+            {
+                var task = handler.TryGetLesson(g.name);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                var (name, cid, uploader, exists) = task.Result;
+
+
+                if (!string.IsNullOrEmpty(cid) && uploader != "0x0000000000000000000000000000000000000000")
+                {
+                    gruppiValidati.Add(g.name);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("LessonRegistryHandler non pronto, nessun gruppo sarà marcato come validato.");
+        }
+
+        // Step 2: Passa i validati al GroupListUI
+        groupListUI.SetGruppiValidati(gruppiValidati);
+
+        // Step 3: Mostra i gruppi normalmente
         groupListUI.ShowGroups(gruppi, GroupListUI.GroupSelectionMode.Download);
+
     }
 
     /// <summary>

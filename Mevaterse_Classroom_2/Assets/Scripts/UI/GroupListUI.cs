@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;  
+using TMPro;
 
 public class GroupListUI : MonoBehaviour
 {
@@ -13,16 +13,22 @@ public class GroupListUI : MonoBehaviour
     public GroupSelectionMode currentMode = GroupSelectionMode.Download;
     public System.Action<Group> OnGroupSelected;
 
+    // Nuova variabile interna opzionale
+    private HashSet<string> gruppiValidatiInterni = null;
 
     public void Start()
     {
         downloadManager = UIReferenceManager.Instance.ipfsLessonDownloader;
-
-
         this.gameObject.SetActive(false);
     }
 
-    //Data una lista di gruppi, istanzia un bottone per ogni gruppo trovato
+    // Metodo per settare i gruppi validati da colorare
+    public void SetGruppiValidati(HashSet<string> gruppiValidati)
+    {
+        gruppiValidatiInterni = gruppiValidati;
+    }
+
+    // Data una lista di gruppi, istanzia un bottone per ogni gruppo trovato
     public void ShowGroups(List<Group> gruppi, GroupSelectionMode mode = GroupSelectionMode.Download)
     {
         currentMode = mode;
@@ -62,6 +68,14 @@ public class GroupListUI : MonoBehaviour
 
             txt.text = gruppo.name;
 
+            // Colora di verde se validato su blockchain
+            if (gruppiValidatiInterni != null && gruppiValidatiInterni.Contains(gruppo.name))
+            {
+                var buttonImage = btn.GetComponent<Image>();
+                if (buttonImage != null)
+                    buttonImage.color = Color.green;
+            }
+
             // Crea una copia locale del gruppo per evitare il problema del closure
             Group selectedGroup = gruppo;
 
@@ -69,13 +83,11 @@ public class GroupListUI : MonoBehaviour
             {
                 Debug.Log("Selezionato gruppo: " + selectedGroup.name);
 
-                // SE sei in modalità download
                 if (currentMode == GroupSelectionMode.Download && downloadManager != null && downloadManager.enabled)
                 {
                     downloadManager.StartCoroutine(downloadManager.GetFilesInGroup(selectedGroup.id));
                 }
 
-                // SE sei in modalità upload, chiama la callback solo in quella modalità
                 if (currentMode == GroupSelectionMode.Upload && OnGroupSelected != null)
                 {
                     OnGroupSelected(selectedGroup);
@@ -89,6 +101,4 @@ public class GroupListUI : MonoBehaviour
             CursorManager.Instance.ShowCursor();
         }
     }
-
 }
-
