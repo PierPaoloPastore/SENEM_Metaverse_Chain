@@ -9174,6 +9174,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f1bfeccd472d934d8f5230b1a474297, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraController: {fileID: 72265474}
 --- !u!114 &618736469
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25884,6 +25885,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 465b062bfd74f144f9eb669593afade1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showConfirmAfterHide: 0
 --- !u!1 &1652174698
 GameObject:
   m_ObjectHideFlags: 0
@@ -29462,12 +29464,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panelUpload: {fileID: 0}
   panelDownload: {fileID: 0}
+  panelNotification: {fileID: 0}
   buttonUploadFolder: {fileID: 0}
   buttonUploadSlide: {fileID: 0}
   groupListUI: {fileID: 0}
   notificationUI: {fileID: 0}
   lessonStorageUI: {fileID: 0}
   ipfsLessonDownloader: {fileID: 0}
+  ipfsLessonUploader: {fileID: 0}
   isInRoom: 0
 --- !u!114 &1853853424
 MonoBehaviour:

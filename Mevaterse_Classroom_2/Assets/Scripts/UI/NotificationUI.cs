@@ -1,71 +1,116 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System;
 
 public class NotificationUI : MonoBehaviour
 {
     private TextMeshProUGUI notificationText;
-    private Button buttonYes;
-    private Button buttonNo;
+    private Button ButtonYes;
+    private Button ButtonNo;
+    private IPFSLessonUploader uploader;
 
-    private void Awake()
+    public bool showConfirmAfterHide = false; // resettata dentro Hide()
+
+
+    void Awake()
     {
+        // Trova il TMP del messaggio
+        //notificationText = transform.Find("Notification_Text")?.GetComponent<TextMeshProUGUI>();
         notificationText = transform.Find("Notification_Text")?.GetComponent<TextMeshProUGUI>();
-        buttonYes = transform.Find("Button_Yes")?.GetComponent<Button>();
-        buttonNo = transform.Find("Button_No")?.GetComponent<Button>();
+        // Trova i riferimenti ai pulsanti e li "spegne" finchè non necessari
+        ButtonYes = transform.Find("Button_Yes")?.GetComponent<Button>();
+        ButtonNo = transform.Find("Button_No")?.GetComponent<Button>();
 
-        Hide();
+        ButtonYes.gameObject.SetActive(false);
+        ButtonNo.gameObject.SetActive(false);
+         
+       
+
+
     }
 
-    /// <summary>
-    /// Mostra una notifica semplice, si chiude automaticamente dopo 3 secondi.
-    /// </summary>
+    public void Start()
+    {
+        uploader = UIReferenceManager.Instance.ipfsLessonUploader;
+        ButtonYes.onClick.AddListener(OnClickYes);
+        ButtonNo.onClick.AddListener(OnClickNo);
+        //Hide();
+        gameObject.SetActive(false);//Lo faccio manualmente perchè hide serve per altro
+    }
+
     public void Show(string message)
     {
         if (notificationText != null)
             notificationText.text = message;
 
-        buttonYes?.gameObject.SetActive(false);
-        buttonNo?.gameObject.SetActive(false);
-        gameObject.SetActive(true);
+        ButtonYes.gameObject.SetActive(false);
+        ButtonNo.gameObject.SetActive(false);
 
-        CancelInvoke();
-        Invoke(nameof(Hide), 3f);
+        CursorManager.Instance.ShowCursor();
+
+
+        gameObject.SetActive(true);
+        CancelInvoke(); // annulla eventuali chiamate precedenti
+        Invoke(nameof(Hide), 2f); // nasconde dopo 2 secondi
     }
 
-    /// <summary>
-    /// Mostra una notifica con due pulsanti: SÌ / NO (ad esempio per validazione blockchain).
-    /// </summary>
-    public void ShowValidationPrompt(string message, Action onYes, Action onNo)
+    public void ShowConfirmUpload()
+    {
+        if (notificationText != null)
+            notificationText.text = "Vuoi registrare la lezione anche sulla blockchain?";
+
+        CursorManager.Instance.ShowCursor();
+
+        ButtonYes.gameObject.SetActive(true);
+        ButtonNo.gameObject.SetActive(true);
+        gameObject.SetActive(true);
+    }
+
+    public void ShowPersistent(string message)
     {
         if (notificationText != null)
             notificationText.text = message;
 
-        CancelInvoke();
+        ButtonYes?.gameObject.SetActive(false);
+        ButtonNo?.gameObject.SetActive(false);
+
+        CursorManager.Instance.ShowCursor();
+
+        CancelInvoke(); // importante: impedisce chiusura automatica
+
         gameObject.SetActive(true);
-
-        buttonYes?.gameObject.SetActive(true);
-        buttonNo?.gameObject.SetActive(true);
-
-        buttonYes?.onClick.RemoveAllListeners();
-        buttonNo?.onClick.RemoveAllListeners();
-
-        buttonYes?.onClick.AddListener(() =>
-        {
-            Hide();
-            onYes?.Invoke();
-        });
-
-        buttonNo?.onClick.AddListener(() =>
-        {
-            Hide();
-            onNo?.Invoke();
-        });
     }
+
+
+
+    private void OnClickYes()
+    {
+        Hide();
+        uploader.HandleUploadConfirmation(yes: true);
+    }
+
+    private void OnClickNo()
+    {
+        Hide();
+        uploader.HandleUploadConfirmation(yes: false);
+    }
+
 
     public void Hide()
     {
         gameObject.SetActive(false);
+
+        if (showConfirmAfterHide)
+        {
+            showConfirmAfterHide = false; // resetto subito per sicurezza
+            ShowConfirmUpload();
+        }
+        else
+        {
+            CursorManager.Instance.HideCursor(); // << SOLO SE NON DEVO APRIRE SUBITO LA SUCCESSIVA
+        }
+
     }
+
+
 }

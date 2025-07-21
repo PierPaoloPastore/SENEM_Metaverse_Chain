@@ -11,12 +11,17 @@ public class UIReferenceManager : MonoBehaviour
     // Riferimenti pubblici a elementi UI
     public GameObject panelUpload;
     public GameObject panelDownload;
+    public GameObject panelNotification;
     public Button buttonUploadFolder;
     public Button buttonUploadSlide;
+   
+
     public GroupListUI groupListUI;
     public NotificationUI notificationUI;
     public LessonStorageUIController lessonStorageUI;
     public IPFSLessonDownloader ipfsLessonDownloader;
+    public IPFSLessonUploader ipfsLessonUploader;
+
 
     [Header("Stato della sessione")]
     public bool isInRoom = false;
@@ -36,12 +41,15 @@ public class UIReferenceManager : MonoBehaviour
         // Inizializzazione riferimenti
         panelUpload = GameObject.Find("Panel_FileManager_Upload");
         panelDownload = GameObject.Find("Panel_FileManager_Download");
+        panelNotification = GameObject.Find("Panel_Notification");
         buttonUploadFolder = GameObject.Find("ButtonUploadFolder")?.GetComponent<Button>();
         buttonUploadSlide = GameObject.Find("ButtonUploadSlide")?.GetComponent<Button>();
         groupListUI = FindObjectOfType<GroupListUI>();
         notificationUI = FindObjectOfType<NotificationUI>();
         lessonStorageUI = FindObjectOfType<LessonStorageUIController>();
         ipfsLessonDownloader = FindObjectOfType<IPFSLessonDownloader>();
+        ipfsLessonUploader = FindObjectOfType<IPFSLessonUploader>();
+
 
     }
 }

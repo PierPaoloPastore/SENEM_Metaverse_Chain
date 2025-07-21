@@ -16,6 +16,12 @@ public class IPFSLessonUploader : MonoBehaviour
 
     private LessonStorageUIController uiController;
 
+    //Test
+    private string ultimaLezione;
+    private string ultimoGroupId;
+
+
+
     void Start()
     {
         var ui = UIReferenceManager.Instance;
@@ -60,6 +66,10 @@ public class IPFSLessonUploader : MonoBehaviour
 
     IEnumerator CreaGruppoECaricaTutteLeSlide(string folderPath, string lessonName)
     {
+        //interazione grafica
+        panelUpload.SetActive(false);
+        CursorManager.Instance.HideCursor();
+
         // Crea gruppo su Pinata
         var jsonBody = "{\"name\":\"" + lessonName + "\"}";
         using var request = new UnityWebRequest("https://api.pinata.cloud/v3/groups/public", "POST")
@@ -100,6 +110,7 @@ public class IPFSLessonUploader : MonoBehaviour
             yield return StartCoroutine(UploadFile(filePath, fileName, groupId));
         }
         // ---------- REGISTRAZIONE SU BLOCKCHAIN ----------
+        /*
         var handler = FindObjectOfType<LessonRegistryHandler>();
         if (handler != null && handler.IsReady())
         {
@@ -124,9 +135,28 @@ public class IPFSLessonUploader : MonoBehaviour
         {
             Debug.LogWarning("LessonRegistryHandler non pronto o assente.");
         }
+        */
+
+
+
+
+        // Salva i dati per la conferma //TEST DA RIMUOVERE SE NON VA
+        ultimaLezione = lessonName;
+        ultimoGroupId = groupId;
+
+        // Chiedi conferma all’utente
+        UIReferenceManager.Instance.notificationUI.ShowConfirmUpload();
+
+
+
+
         // ---------- INTERAZIONE UI----------
+        UIReferenceManager.Instance.notificationUI.showConfirmAfterHide = true;
+        //Quando terminerà la notifica, con questa flag verrà proposto di caricare su Blockchain
+
         UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");
-        uiController?.TogglePanel(panelUpload);
+       
+        //uiController?.TogglePanel(panelUpload);
         CursorManager.Instance.HideCursor();
     }
 
@@ -195,9 +225,7 @@ public class IPFSLessonUploader : MonoBehaviour
 
         int nextIndex = (files != null ? files.Count : 0) + 1;
         string fileName = GeneraNomeFile(selectedGroup.name, nextIndex, filePath);
-
         yield return StartCoroutine(UploadFile(filePath, fileName, selectedGroup.id));
-        UIReferenceManager.Instance.notificationUI?.Show("Slide caricata con successo!");
     }
 
     // ------------ FUNZIONE UNIFICATA PER CARICARE UN FILE ------------
@@ -251,7 +279,6 @@ public class IPFSLessonUploader : MonoBehaviour
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log($"Slide caricata: {fileName}");
-            UIReferenceManager.Instance.notificationUI?.Show("Slide caricata con successo!");
         }
         else
         {
@@ -270,4 +297,54 @@ public class IPFSLessonUploader : MonoBehaviour
         string ext = Path.GetExtension(filePath).ToLower();
         return $"{baseName}_{index}_{safe}{ext}";
     }
+
+    // ------------ FUNZIONI BLOCKCHAIN ------------
+    IEnumerator InviaTransazioneBlockchain(string lessonName, string groupId)
+    {
+        UIReferenceManager.Instance.notificationUI.ShowPersistent("In attesa di conferma della transazione...\nControlla il telefono");
+
+        bool done = false;
+        bool success = false;
+
+        var handler = FindObjectOfType<LessonRegistryHandler>();
+        if (handler == null || !handler.IsReady())
+        {
+            UIReferenceManager.Instance.notificationUI.Show("Errore: Handler non disponibile.");
+            yield break;
+        }
+
+        var task = handler.RegisterLesson(lessonName, groupId)
+            .ContinueWith(t =>
+            {
+                success = t.Result;
+                done = true;
+            });
+
+        while (!done) yield return null;
+
+        if (success)
+            UIReferenceManager.Instance.notificationUI.Show("Registrazione completata con successo!");
+        else
+            UIReferenceManager.Instance.notificationUI.Show("Errore durante la registrazione su blockchain.");
+    }
+
+
+    public void HandleUploadConfirmation(bool yes)
+    {
+        if (!yes)
+        {
+            Debug.Log("L'utente ha scelto di NON registrare la lezione su blockchain.");
+            return;
+        }
+        /*
+        if (!WalletManager.Instance.IsWalletConnected())
+        {
+            UIReferenceManager.Instance.notificationUI.Show("Collega prima il wallet e riprova.");
+            return;
+        }
+        */
+
+        StartCoroutine(InviaTransazioneBlockchain(ultimaLezione, ultimoGroupId));
+    }
+
 }
