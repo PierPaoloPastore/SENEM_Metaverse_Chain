@@ -70,10 +70,14 @@ public class GroupListUI : MonoBehaviour
 
             // Colora di verde se validato su blockchain
             if (gruppiValidatiInterni != null && gruppiValidatiInterni.Contains(gruppo.name))
-            {
+            {/*
                 var buttonImage = btn.GetComponent<Image>();
                 if (buttonImage != null)
-                    buttonImage.color = Color.green;
+                    buttonImage.color = Color.green;*/
+                var checkmark = buttonObj.transform.Find("CheckMark");
+                if (checkmark != null)
+                    checkmark.gameObject.SetActive(true);
+
             }
 
             // Crea una copia locale del gruppo per evitare il problema del closure
