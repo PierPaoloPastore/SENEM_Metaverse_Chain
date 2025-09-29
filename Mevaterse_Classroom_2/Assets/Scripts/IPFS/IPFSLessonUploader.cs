@@ -1,3 +1,4 @@
+using ChainSafe.Gaming.UnityPackage;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5,10 +6,8 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
-using ChainSafe.Gaming.UnityPackage;
 using ChainSafe.Gaming.Web3;
-using ChainSafe.Gaming.Web3.Unity; 
-
+using ChainSafe.Gaming.Web3.Unity;
 
 using ChainSafe.Gaming.Evm.Contracts.Custom;
 using SFB;
@@ -24,8 +23,6 @@ public class IPFSLessonUploader : MonoBehaviour
     //Test
     private string ultimaLezione;
     private string ultimoGroupId;
-
-
 
     void Start()
     {
@@ -66,12 +63,37 @@ public class IPFSLessonUploader : MonoBehaviour
 
         string folderPath = paths[0];
         string lessonName = Path.GetFileName(folderPath);
+
+        // >>> CHECK PRIMA di chiudere il pannello / creare il gruppo
+        string[] filePathsCheck = Directory.GetFiles(folderPath);
+        List<string> validFilesCheck = new List<string>();
+        foreach (var p in filePathsCheck)
+        {
+            var ext = Path.GetExtension(p).ToLower();
+            if (ext == ".jpg" || ext == ".jpeg") validFilesCheck.Add(p);
+        }
+        if (validFilesCheck.Count == 0)
+        {
+            // CHIUDI SUBITO IL PANNELLO DI UPLOAD per evitare UI bloccata
+            panelUpload.SetActive(false);
+
+            // Assicurati che non partano prompt successivi
+            UIReferenceManager.Instance.notificationUI.showConfirmAfterHide = false;
+
+            // Mostra la notifica (gestisce da sola il cursore)
+            UIReferenceManager.Instance.notificationUI?.Show("Nessuna slide .jpg trovata nella cartella selezionata.");
+            return;
+        }
+        // <<< FINE CHECK
+
         StartCoroutine(CreaGruppoECaricaTutteLeSlide(folderPath, lessonName));
     }
 
     IEnumerator CreaGruppoECaricaTutteLeSlide(string folderPath, string lessonName)
     {
-        //interazione grafica
+        // ATTENZIONE: il check .jpg è già stato fatto in UploadNewLesson()
+
+        // interazione grafica
         panelUpload.SetActive(false);
         CursorManager.Instance.HideCursor();
 
@@ -97,6 +119,7 @@ public class IPFSLessonUploader : MonoBehaviour
         var groupId = JsonUtility.FromJson<CreatedGroupResponse>(request.downloadHandler.text).data.id;
         Debug.Log("Gruppo creato: " + groupId);
 
+        // Filtra i file .jpg/.jpeg (riuso del filtro, ma a questo punto sappiamo già che non è vuota)
         string[] filePaths = Directory.GetFiles(folderPath);
         List<string> validFiles = new List<string>();
         foreach (var path in filePaths)
@@ -114,6 +137,7 @@ public class IPFSLessonUploader : MonoBehaviour
             UIReferenceManager.Instance.notificationUI?.Show($"Caricamento slide {i + 1}/{validFiles.Count}...");
             yield return StartCoroutine(UploadFile(filePath, fileName, groupId));
         }
+
         // ---------- REGISTRAZIONE SU BLOCKCHAIN ----------       
         // Salva i dati per la conferma 
         ultimaLezione = lessonName;
@@ -126,7 +150,7 @@ public class IPFSLessonUploader : MonoBehaviour
         UIReferenceManager.Instance.notificationUI.showConfirmAfterHide = true;
         //Quando terminerà la notifica, con questa flag verrà proposto di caricare su Blockchain
 
-        UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");     
+        UIReferenceManager.Instance.notificationUI?.Show("Upload completato!");
         CursorManager.Instance.HideCursor();
     }
 
@@ -298,7 +322,6 @@ public class IPFSLessonUploader : MonoBehaviour
             UIReferenceManager.Instance.notificationUI.Show("Errore durante la registrazione su blockchain.");
     }
 
-
     public async void HandleUploadConfirmation(bool yes)
     {
         if (!yes)
@@ -316,5 +339,4 @@ public class IPFSLessonUploader : MonoBehaviour
 
         StartCoroutine(InviaTransazioneBlockchain(ultimaLezione, ultimoGroupId));
     }
-
 }
